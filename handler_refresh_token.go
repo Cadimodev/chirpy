@@ -19,25 +19,9 @@ func (cfg *apiConfig) handlerRefreshToken(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	refreshTokenResult, err := cfg.db.GetRefreshToken(r.Context(), refreshToken)
+	user, err := cfg.db.GetUserFromRefreshToken(r.Context(), refreshToken)
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Invalid refresh token", err)
-		return
-	}
-
-	if time.Now().UTC().After(refreshTokenResult.ExpiresAt) {
-		respondWithError(w, http.StatusUnauthorized, "Invalid refresh token", err)
-		return
-	}
-
-	if refreshTokenResult.RevokedAt.Valid {
-		respondWithError(w, http.StatusUnauthorized, "Invalid refresh token", err)
-		return
-	}
-
-	user, err := cfg.db.GetUserFromRefreshToken(r.Context(), refreshTokenResult.Token)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "User not found", err)
+		respondWithError(w, http.StatusUnauthorized, "Couldn't get user for refresh token", err)
 		return
 	}
 
